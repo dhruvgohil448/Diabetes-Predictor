@@ -1,0 +1,82 @@
+{
+  "theme": "light",
+  "archetype": "Medical AI (Calm & Precise)",
+  "colors": {
+    "background": "#F8FAFC",
+    "primary": "#2563EB",
+    "primary_hover": "#1D4ED8",
+    "primary_light": "#60A5FA",
+    "text_dark": "#1E293B",
+    "text_muted": "#64748B",
+    "success": "#16A34A",
+    "warning": "#F59E0B",
+    "danger": "#DC2626",
+    "border": "#E2E8F0",
+    "surface": "#FFFFFF"
+  },
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "Figtree",
+    "h1": "text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#1E293B]",
+    "h2": "text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-[#1E293B]",
+    "h3": "text-xl sm:text-2xl font-semibold text-[#1E293B]",
+    "h4": "text-lg sm:text-xl font-medium text-[#1E293B]",
+    "body": "text-base font-normal leading-relaxed text-[#64748B]",
+    "label": "text-sm font-semibold tracking-wide uppercase text-[#1E293B]"
+  },
+  "layout_and_spacing": {
+    "general": "Generous spacing. Use p-6, p-8, p-12 for containers to breathe.",
+    "border_radius": "Rounded cards with rounded-2xl or rounded-3xl",
+    "shadows": "Soft shadows: shadow-[0_8px_30px_rgb(0,0,0,0.04)] to shadow-[0_8px_30px_rgb(0,0,0,0.08)]",
+    "bento_grid": "Use grid-cols-1 md:grid-cols-12 with gap-6 or gap-8 for dashboards and features."
+  },
+  "components": {
+    "buttons": "Primary buttons: bg-[#2563EB] text-white hover:bg-[#1D4ED8] rounded-xl px-6 py-3 font-semibold transition-all duration-200 shadow-sm shadow-[#2563EB]/20 hover:shadow-md hover:-translate-y-0.5. Secondary buttons: bg-white text-[#1E293B] border border-[#E2E8F0] hover:bg-gray-50.",
+    "cards": "bg-white rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50",
+    "inputs": "Shadcn UI Form elements. Rounded-lg, border-[#E2E8F0], focus:ring-2 focus:ring-[#60A5FA]/50 focus:border-[#2563EB].",
+    "circular_progress": "Use customized svg or recharts to show a medical grade circular gauge for risk probability. The color should dynamically map to danger/warning/success based on percentage.",
+    "badges": "Rounded-full px-3 py-1 text-sm font-medium. Use success/warning/danger colors with 10% opacity bg and 100% text color for badges.",
+    "icons": "lucide-react for all icons (Medical, User, Activity, CheckCircle, AlertTriangle, etc.)"
+  },
+  "pages": {
+    "home": {
+      "layout": "Hero section -> Feature Bento Grid -> CTA",
+      "hero": "Split layout. Left: Large H1, subtitle, buttons. Right: Image/Illustration.",
+      "features": "3 cards, use asymmetrical bento grid or 3-column equal grid. Add subtle hover lift."
+    },
+    "patient_form": {
+      "layout": "Centered card or split layout with form on one side and instructions on the other.",
+      "form_fields": "8 fields. Use 2-column grid on desktop (grid-cols-2). Include tooltips (Shadcn Tooltip) next to labels for medical context. Validation rules required.",
+      "loading_state": "Analyze Risk button should have a spinner/pulse state when clicked."
+    },
+    "result_recommendation": {
+      "layout": "Dashboard-style bento grid.",
+      "top_section": "Large card with Circular Progress and Risk Badge (Low/Medium/High/Very High).",
+      "summary_section": "Grid of 8 small metric cards (BMI, Glucose, etc.) showing input values.",
+      "recommendations": "List style with 4-5 actionable medical recommendations.",
+      "actions": "Analyze Another Patient & Download Report buttons."
+    }
+  },
+  "media": {
+    "image_urls": {
+      "hero_illustration": {
+        "url": "https://images.unsplash.com/photo-1758691462774-f01ed567f2c4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwxfHxkb2N0b3IlMjB1c2luZyUyMHRhYmxldCUyMGZ1dHVyaXN0aWN8ZW58MHx8fHwxNzc1NDg2Mjg5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Doctor using a futuristic tablet in an office",
+        "category": "home_hero"
+      },
+      "abstract_medical_ai": {
+        "url": "https://images.unsplash.com/photo-1603054400223-7c796e60ba9d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHwyfHxtZWRpY2FsJTIwYWklMjBpbGx1c3RyYXRpb24lMjBibHVlfGVufDB8fHx8MTc3NTQ4NjI4OXww&ixlib=rb-4.1.0&q=85",
+        "description": "Blue and white abstract illustration for AI",
+        "category": "home_background_or_feature"
+      }
+    }
+  },
+  "motion": {
+    "hover": "Subtle -translate-y-1 and shadow-lg for cards.",
+    "page_transition": "Framer motion opacity 0 to 1, y: 10 to 0 on load.",
+    "loading": "Pulse animation on the Analyze Risk button or a skeleton loader for the result page."
+  },
+  "testing": {
+    "requirements": "MANDATORY: Add data-testid attribute to all interactive and key informational elements (buttons, form inputs, menus, error messages, tabs)."
+  }
+}
