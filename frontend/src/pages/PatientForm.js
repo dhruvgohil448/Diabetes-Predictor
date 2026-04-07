@@ -15,84 +15,59 @@ const PatientForm = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
-    pregnancies: '',
-    glucose: '',
-    bloodPressure: '',
-    skinThickness: '',
-    insulin: '',
-    bmi: '',
-    diabetesPedigreeFunction: '',
-    age: ''
-  });
+  hba1c: '',
+  bmi: '',
+  age: '',
+  tg: '',
+  urea: ''
+});
 
   const fields = [
-    {
-      name: 'pregnancies',
-      label: 'Pregnancies',
-      type: 'number',
-      placeholder: 'e.g. 2',
-      tooltip: 'Number of times pregnant',
-      unit: ''
-    },
-    {
-      name: 'glucose',
-      label: 'Glucose',
-      type: 'number',
-      placeholder: 'e.g. 150',
-      tooltip: 'Blood sugar level in mg/dL',
-      unit: 'mg/dL'
-    },
-    {
-      name: 'bloodPressure',
-      label: 'Blood Pressure',
-      type: 'number',
-      placeholder: 'e.g. 80',
-      tooltip: 'Diastolic blood pressure in mmHg',
-      unit: 'mmHg'
-    },
-    {
-      name: 'skinThickness',
-      label: 'Skin Thickness',
-      type: 'number',
-      placeholder: 'e.g. 20',
-      tooltip: 'Triceps skin fold thickness in mm',
-      unit: 'mm'
-    },
-    {
-      name: 'insulin',
-      label: 'Insulin',
-      type: 'number',
-      placeholder: 'e.g. 90',
-      tooltip: '2-Hour serum insulin in mu U/ml',
-      unit: 'mu U/ml'
-    },
-    {
-      name: 'bmi',
-      label: 'BMI',
-      type: 'number',
-      placeholder: 'e.g. 32.5',
-      tooltip: 'Body Mass Index based on height and weight',
-      unit: 'kg/m²',
-      step: '0.1'
-    },
-    {
-      name: 'diabetesPedigreeFunction',
-      label: 'Diabetes Pedigree Function',
-      type: 'number',
-      placeholder: 'e.g. 0.67',
-      tooltip: 'Diabetes pedigree function score',
-      unit: '',
-      step: '0.01'
-    },
-    {
-      name: 'age',
-      label: 'Age',
-      type: 'number',
-      placeholder: 'e.g. 45',
-      tooltip: 'Age in years',
-      unit: 'years'
-    }
-  ];
+  {
+    name: 'hba1c',
+    label: 'HbA1c',
+    type: 'number',
+    placeholder: 'e.g. 6.5',
+    tooltip: 'Hemoglobin A1c percentage',
+    unit: '%',
+    step: '0.1'
+  },
+  {
+    name: 'bmi',
+    label: 'BMI',
+    type: 'number',
+    placeholder: 'e.g. 28.4',
+    tooltip: 'Body Mass Index',
+    unit: 'kg/m²',
+    step: '0.1'
+  },
+  {
+    name: 'age',
+    label: 'Age',
+    type: 'number',
+    placeholder: 'e.g. 45',
+    tooltip: 'Age in years',
+    unit: 'years'
+  },
+  {
+    name: 'tg',
+    label: 'Triglycerides (TG)',
+    type: 'number',
+    placeholder: 'e.g. 2.5',
+    tooltip: 'Triglyceride level in mmol/L',
+    unit: 'mmol/L',
+    step: '0.1'
+  },
+  {
+    name: 'urea',
+    label: 'Urea',
+    type: 'number',
+    placeholder: 'e.g. 5.2',
+    tooltip: 'Blood urea level in mmol/L',
+    unit: 'mmol/L',
+    step: '0.1'
+  }
+];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -109,36 +84,73 @@ const PatientForm = () => {
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    fields.forEach(field => {
-      if (!formData[field.name] || formData[field.name] === '') {
-        newErrors[field.name] = 'This field is required';
-      } else if (parseFloat(formData[field.name]) < 0) {
-        newErrors[field.name] = 'Value cannot be negative';
-      }
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const newErrors = {};
+
+  if (!formData.hba1c || formData.hba1c < 3 || formData.hba1c > 16) {
+    newErrors.hba1c = 'HbA1c must be between 3 and 16';
+  }
+
+  if (!formData.bmi || formData.bmi < 15 || formData.bmi > 50) {
+    newErrors.bmi = 'BMI must be between 15 and 50';
+  }
+
+  if (!formData.age || formData.age < 10 || formData.age > 90) {
+    newErrors.age = 'Age must be between 10 and 90';
+  }
+
+  if (!formData.tg || formData.tg < 0 || formData.tg > 14) {
+    newErrors.tg = 'TG must be between 0 and 14';
+  }
+
+  if (!formData.urea || formData.urea < 0 || formData.urea > 20) {
+    newErrors.urea = 'Urea must be between 0 and 20';
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
+  e.preventDefault();
+
+  if (!validateForm()) return;
+
+  setLoading(true);
+
+  try {
+    const payload = {
+      HbA1c: Number(formData.hba1c),
+      BMI: Number(formData.bmi),
+      AGE: Number(formData.age),
+      TG: Number(formData.tg),
+      Urea: Number(formData.urea)
+    };
+
+    const response = await fetch('http://localhost:5000/predict', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Prediction failed');
     }
 
-    setLoading(true);
+    localStorage.setItem('patientData', JSON.stringify(payload));
+    localStorage.setItem('predictionResult', JSON.stringify(result));
 
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    // Store form data in localStorage for result page
-    localStorage.setItem('patientData', JSON.stringify(formData));
-    
-    setLoading(false);
     navigate('/result');
-  };
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]" data-testid="patient-form-page">

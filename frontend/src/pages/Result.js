@@ -23,74 +23,84 @@ const Result = () => {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    const data = localStorage.getItem('patientData');
-    if (!data) {
-      navigate('/predict');
-      return;
+  const patientDataString = localStorage.getItem('patientData');
+  const predictionResultString = localStorage.getItem('predictionResult');
+
+  if (!patientDataString || !predictionResultString) {
+    navigate('/predict');
+    return;
+  }
+
+  const patient = JSON.parse(patientDataString);
+  const prediction = JSON.parse(predictionResultString);
+
+  setPatientData(patient);
+
+  const hba1c = parseFloat(patient.HbA1c);
+  const bmi = parseFloat(patient.BMI);
+  const age = parseFloat(patient.AGE);
+  const tg = parseFloat(patient.TG);
+  const urea = parseFloat(patient.Urea);
+
+  // Use backend prediction if available
+  const probability = prediction.fuzzy_score
+  ? Math.round((prediction.fuzzy_score / 10) * 100)
+  : prediction.confidence
+    ? parseFloat(prediction.confidence)
+    : 0;
+
+const risk = prediction.prediction || 'Unknown';
+
+  const reasons = [];
+
+  if (hba1c >= 6.5) reasons.push('HbA1c level is elevated');
+  if (bmi >= 30) reasons.push('BMI falls in the obese range');
+  if (age >= 45) reasons.push('Age increases diabetes risk');
+  if (tg >= 2.3) reasons.push('Triglyceride level is high');
+  if (urea >= 7) reasons.push('Urea level is elevated');
+
+  const explanation =
+  prediction.explanation ||
+  (reasons.length > 0
+    ? `The patient has ${risk.toLowerCase()} because ${reasons.join(', ')}.`
+    : 'All parameters are within normal ranges.');
+
+  const recommendations =
+  prediction.precautions || [];
+
+  if (hba1c >= 6.5) {
+    recommendations.push('Monitor blood sugar regularly');
+    recommendations.push('Consult an endocrinologist');
+  }
+
+  if (bmi >= 30) {
+    recommendations.push('Adopt a low-calorie healthy diet');
+    recommendations.push('Exercise at least 30 minutes daily');
+  }
+
+  if (tg >= 2.3) {
+    recommendations.push('Reduce fatty food intake');
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push('Maintain your current healthy lifestyle');
+    recommendations.push('Get regular health checkups');
+  }
+
+  setResult({
+    probability,
+    risk,
+    explanation,
+    recommendations,
+    summary: {
+      hba1c,
+      bmi,
+      age,
+      tg,
+      urea
     }
-
-    const formData = JSON.parse(data);
-    setPatientData(formData);
-
-    // Generate mock result based on form data
-    const glucose = parseFloat(formData.glucose);
-    const bmi = parseFloat(formData.bmi);
-    const age = parseFloat(formData.age);
-    const bloodPressure = parseFloat(formData.bloodPressure);
-
-    // Simple risk calculation
-    let probability = 30;
-    if (glucose > 140) probability += 20;
-    if (bmi > 30) probability += 20;
-    if (age > 45) probability += 15;
-    if (bloodPressure > 80) probability += 15;
-
-    probability = Math.min(probability, 95);
-
-    let risk = 'Low Risk';
-    let explanation = 'The patient has a low risk of diabetes. All parameters are within normal ranges.';
-    
-    if (probability >= 30 && probability < 50) {
-      risk = 'Medium Risk';
-      explanation = 'The patient has a medium risk because some health indicators are slightly elevated.';
-    } else if (probability >= 50 && probability < 70) {
-      risk = 'High Risk';
-      explanation = `The patient has a high risk because ${glucose > 140 ? 'glucose level is high' : ''} ${glucose > 140 && bmi > 30 ? 'and' : ''} ${bmi > 30 ? 'BMI falls in the obese range' : ''}.`;
-    } else if (probability >= 70) {
-      risk = 'Very High Risk';
-      explanation = 'The patient has a very high risk of diabetes. Multiple health indicators are significantly elevated.';
-    }
-
-    const recommendations = [];
-    if (probability >= 50) {
-      recommendations.push('Consult a doctor immediately');
-    }
-    if (glucose > 140) {
-      recommendations.push('Monitor blood sugar regularly');
-      recommendations.push('Reduce sugar intake');
-    }
-    if (bmi > 30) {
-      recommendations.push('Exercise regularly');
-      recommendations.push('Maintain a healthy diet');
-    }
-    if (recommendations.length === 0) {
-      recommendations.push('Maintain current healthy lifestyle');
-      recommendations.push('Regular health checkups');
-    }
-
-    setResult({
-      probability,
-      risk,
-      explanation,
-      summary: {
-        glucose,
-        bmi,
-        bloodPressure,
-        age
-      },
-      recommendations
-    });
-  }, [navigate]);
+  });
+}, [navigate]);
 
   const handleDownloadReport = () => {
     toast.success('Report download feature coming soon!', {
@@ -181,79 +191,117 @@ const Result = () => {
             <h3 className="text-xl sm:text-2xl font-semibold text-[#1E293B] mb-4">
               Patient Summary
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
-                data-testid="summary-glucose"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-[#DC2626]/10 p-2 rounded-lg">
-                    <Droplets className="text-[#DC2626]" size={20} />
-                  </div>
-                  <span className="text-sm text-[#64748B]">Glucose</span>
-                </div>
-                <p className="text-2xl font-bold text-[#1E293B]">{result.summary.glucose}</p>
-                <p className="text-xs text-[#64748B] mt-1">
-                  {result.summary.glucose > 140 ? 'High' : result.summary.glucose > 100 ? 'Normal' : 'Low'}
-                </p>
-              </motion.div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 0.1 }}
+    className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
+  >
+    <div className="flex items-center gap-3 mb-2">
+      <div className="bg-[#DC2626]/10 p-2 rounded-lg">
+        <Droplets className="text-[#DC2626]" size={20} />
+      </div>
+      <span className="text-sm text-[#64748B]">HbA1c</span>
+    </div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
-                data-testid="summary-bmi"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-[#F59E0B]/10 p-2 rounded-lg">
-                    <Activity className="text-[#F59E0B]" size={20} />
-                  </div>
-                  <span className="text-sm text-[#64748B]">BMI</span>
-                </div>
-                <p className="text-2xl font-bold text-[#1E293B]">{result.summary.bmi}</p>
-                <p className="text-xs text-[#64748B] mt-1">
-                  {result.summary.bmi > 30 ? 'Obese' : result.summary.bmi > 25 ? 'Overweight' : 'Normal'}
-                </p>
-              </motion.div>
+    <p className="text-2xl font-bold text-[#1E293B]">
+      {result.summary.hba1c}
+    </p>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
-                data-testid="summary-blood-pressure"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-[#2563EB]/10 p-2 rounded-lg">
-                    <Heart className="text-[#2563EB]" size={20} />
-                  </div>
-                  <span className="text-sm text-[#64748B]">BP</span>
-                </div>
-                <p className="text-2xl font-bold text-[#1E293B]">{result.summary.bloodPressure}</p>
-                <p className="text-xs text-[#64748B] mt-1">mmHg</p>
-              </motion.div>
+    <p className="text-xs text-[#64748B] mt-1">
+      {result.summary.hba1c >= 6.5 ? 'High' : 'Normal'}
+    </p>
+  </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
-                data-testid="summary-age"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-[#16A34A]/10 p-2 rounded-lg">
-                    <User className="text-[#16A34A]" size={20} />
-                  </div>
-                  <span className="text-sm text-[#64748B]">Age</span>
-                </div>
-                <p className="text-2xl font-bold text-[#1E293B]">{result.summary.age}</p>
-                <p className="text-xs text-[#64748B] mt-1">years</p>
-              </motion.div>
-            </div>
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 0.2 }}
+    className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
+  >
+    <div className="flex items-center gap-3 mb-2">
+      <div className="bg-[#F59E0B]/10 p-2 rounded-lg">
+        <Activity className="text-[#F59E0B]" size={20} />
+      </div>
+      <span className="text-sm text-[#64748B]">BMI</span>
+    </div>
+
+    <p className="text-2xl font-bold text-[#1E293B]">
+      {result.summary.bmi}
+    </p>
+
+    <p className="text-xs text-[#64748B] mt-1">
+      {result.summary.bmi >= 30 ? 'Obese' : result.summary.bmi >= 25 ? 'Overweight' : 'Normal'}
+    </p>
+  </motion.div>
+
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 0.3 }}
+    className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
+  >
+    <div className="flex items-center gap-3 mb-2">
+      <div className="bg-[#2563EB]/10 p-2 rounded-lg">
+        <Heart className="text-[#2563EB]" size={20} />
+      </div>
+      <span className="text-sm text-[#64748B]">TG</span>
+    </div>
+
+    <p className="text-2xl font-bold text-[#1E293B]">
+      {result.summary.tg}
+    </p>
+
+    <p className="text-xs text-[#64748B] mt-1">
+      {result.summary.tg >= 2.3 ? 'High' : 'Normal'}
+    </p>
+  </motion.div>
+
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 0.4 }}
+    className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
+  >
+    <div className="flex items-center gap-3 mb-2">
+      <div className="bg-[#8B5CF6]/10 p-2 rounded-lg">
+        <Activity className="text-[#8B5CF6]" size={20} />
+      </div>
+      <span className="text-sm text-[#64748B]">Urea</span>
+    </div>
+
+    <p className="text-2xl font-bold text-[#1E293B]">
+      {result.summary.urea}
+    </p>
+
+    <p className="text-xs text-[#64748B] mt-1">
+      {result.summary.urea >= 7 ? 'High' : 'Normal'}
+    </p>
+  </motion.div>
+
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 0.5 }}
+    className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#E2E8F0]/50"
+  >
+    <div className="flex items-center gap-3 mb-2">
+      <div className="bg-[#16A34A]/10 p-2 rounded-lg">
+        <User className="text-[#16A34A]" size={20} />
+      </div>
+      <span className="text-sm text-[#64748B]">Age</span>
+    </div>
+
+    <p className="text-2xl font-bold text-[#1E293B]">
+      {result.summary.age}
+    </p>
+
+    <p className="text-xs text-[#64748B] mt-1">
+      years
+    </p>
+  </motion.div>
+</div>
           </div>
 
           {/* Recommendations */}
