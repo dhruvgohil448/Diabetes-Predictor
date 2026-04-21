@@ -1,9 +1,21 @@
 Flask==3.0.3
+Flask-Cors==5.0.0
+Werkzeug==3.0.4
+
 joblib==1.5.3
 numpy==1.26.4
 scikit-learn==1.5.0
 scipy==1.17.1
 scikit-fuzzy==0.5.0
+
+pdfplumber==0.11.4
+pytesseract==0.3.13
+Pillow==10.4.0
+reportlab==4.2.2
+
+python-dotenv==1.0.1
+
 gunicorn==21.2.0
+
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.11.0+cpu
