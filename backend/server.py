@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from model import get_final_prediction
+import boto3
+from sqlalchemy import create_engine, text
 
 import os
 import re
@@ -22,12 +24,16 @@ UPLOAD_FOLDER = "uploads"
 REPORT_FOLDER = "generated_reports"
 ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
 
+S3_BUCKET = "kgdbucket101"
+S3_REGION = "ap-south-1"
+
+DATABASE_URL = "postgresql+psycopg2://postgres:Kd9821187076@diabetes-db.cnc4g8mw6c86.ap-south-1.rds.amazonaws.com:5432/diabetes_app"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(REPORT_FOLDER, exist_ok=True)
 
-# If using Windows, uncomment and set your Tesseract path:
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
+s3 = boto3.client("s3")
+engine = create_engine(DATABASE_URL)
 
 # =========================
 # HELPERS
@@ -167,6 +173,7 @@ def upload_reports():
         }
 
         uploaded_files = []
+        uploaded_urls = []
 
         for file in files:
             if file.filename == "":
@@ -182,22 +189,25 @@ def upload_reports():
             save_path = os.path.join(UPLOAD_FOLDER, unique_name)
 
             file.save(save_path)
+
+            # Upload original report to S3
+            s3_key = f"uploads/{unique_name}"
+            s3.upload_file(save_path, S3_BUCKET, s3_key)
+
+            file_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
+
             uploaded_files.append(original_name)
+            uploaded_urls.append(file_url)
 
             extension = original_name.rsplit(".", 1)[1].lower()
 
-            # Extract text
             if extension == "pdf":
                 text = extract_pdf_text(save_path)
             else:
                 text = extract_image_text(save_path)
 
-            print(f"\n===== OCR TEXT FROM {original_name} =====")
-            print(text[:1000])
-
             values = extract_medical_values(text)
 
-            # Fill only missing fields
             for key, value in values.items():
                 if extracted[key] is None and value is not None:
                     extracted[key] = value
@@ -206,6 +216,7 @@ def upload_reports():
             {
                 "message": "Reports processed successfully",
                 "uploaded_files": uploaded_files,
+                "uploaded_urls": uploaded_urls,
                 "extracted": extracted,
             }
         ), 200
@@ -280,6 +291,51 @@ def predict():
 
         if "error" in result:
             return jsonify(result), 500
+
+        try:
+            with engine.connect() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO patient_reports
+                        (
+                            filename,
+                            hba1c,
+                            bmi,
+                            age,
+                            tg,
+                            urea,
+                            prediction,
+                            confidence,
+                            explanation
+                        )
+                        VALUES
+                        (
+                            :filename,
+                            :hba1c,
+                            :bmi,
+                            :age,
+                            :tg,
+                            :urea,
+                            :prediction,
+                            :confidence,
+                            :explanation
+                        )
+                    """),
+                    {
+                        "filename": data.get("filename", "manual-entry"),
+                        "hba1c": extracted_features["hba1c"],
+                        "bmi": extracted_features["bmi"],
+                        "age": int(extracted_features["age"]),
+                        "tg": extracted_features["tg"],
+                        "urea": extracted_features["urea"],
+                        "prediction": result.get("prediction"),
+                        "confidence": result.get("confidence"),
+                        "explanation": result.get("explanation"),
+                    }
+                )
+                conn.commit()
+        except Exception as db_error:
+            print("Database insert failed:", db_error)
 
         return jsonify(result), 200
 
@@ -424,12 +480,39 @@ def download_report():
 
         pdf.save()
 
-        return send_file(
+        s3_key = f"reports/{filename}"
+        s3.upload_file(
             filepath,
-            as_attachment=True,
-            download_name="diabetes_report.pdf",
-            mimetype="application/pdf",
+            S3_BUCKET,
+            s3_key,
+            ExtraArgs={"ContentType": "application/pdf"}
         )
+
+        pdf_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
+
+        try:
+            with engine.connect() as conn:
+                conn.execute(
+                    text("""
+                        UPDATE patient_reports
+                        SET report_pdf = :pdf_url
+                        WHERE id = (
+                            SELECT id
+                            FROM patient_reports
+                            ORDER BY created_at DESC
+                            LIMIT 1
+                        )
+                    """),
+                    {"pdf_url": pdf_url}
+                )
+                conn.commit()
+        except Exception as db_error:
+            print("Failed to save PDF URL:", db_error)
+
+        return jsonify({
+            "message": "Report generated successfully",
+            "pdf_url": pdf_url
+        })
 
     except Exception as e:
         return jsonify(

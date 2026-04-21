@@ -112,10 +112,13 @@ const PatientForm = () => {
         form.append("reports", file);
       });
 
-      const response = await fetch("http://localhost:5000/upload-reports", {
-        method: "POST",
-        body: form,
-      });
+      const response = await fetch(
+        "http://ec2-13-235-73-2.ap-south-1.compute.amazonaws.com:5000/upload-reports",
+        {
+          method: "POST",
+          body: form,
+        },
+      );
 
       const data = await response.json();
 
@@ -203,13 +206,16 @@ const PatientForm = () => {
         Urea: Number(formData.urea),
       };
 
-      const response = await fetch("http://localhost:5000/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "http://ec2-13-235-73-2.ap-south-1.compute.amazonaws.com:5000/predict",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const result = await response.json();
 
