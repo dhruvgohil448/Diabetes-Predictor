@@ -27,7 +27,7 @@ ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
 S3_BUCKET = "kgdbucket101"
 S3_REGION = "ap-south-1"
 
-DATABASE_URL = "postgresql+psycopg2://postgres:Kd9821187076@diabetes-db.cnc4g8mw6c86.ap-south-1.rds.amazonaws.com:5432/diabetes_app"
+DATABASE_URL = "postgresql+psycopg2://postgres:Kd9821186@diabetes-db.cnc4gc86.ap-south-1.rds.amazonaws.com:5432/diabetes_app"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(REPORT_FOLDER, exist_ok=True)
@@ -524,4 +524,4 @@ def download_report():
 # START SERVER
 # =========================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)
