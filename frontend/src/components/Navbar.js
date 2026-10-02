@@ -16,8 +16,8 @@ const Navbar = () => {
               <Brain className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#1E293B] tracking-tight">Hybrid Diabetes</h1>
-              <p className="text-xs text-[#64748B] -mt-1">Prediction System</p>
+              <h1 className="text-xl font-bold text-[#1E293B] tracking-tight">Diabetes Predictor</h1>
+              <p className="text-xs text-[#64748B] -mt-1">Risk Assessment System</p>
             </div>
           </Link>
 

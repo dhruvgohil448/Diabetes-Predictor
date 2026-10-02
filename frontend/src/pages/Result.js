@@ -19,6 +19,8 @@ import CircularProgress from "../components/CircularProgress";
 import { toast } from "sonner";
 import { Toaster } from "../components/ui/sonner";
 
+const API_BASE = process.env.REACT_APP_API_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
+
 const Result = () => {
   const navigate = useNavigate();
 
@@ -52,8 +54,8 @@ const Result = () => {
     const tg = parseFloat(patient.TG);
     const urea = parseFloat(patient.Urea);
 
-    const probability = prediction.fuzzy_score
-      ? Math.round((prediction.fuzzy_score / 10) * 100)
+    const probability = prediction.probability != null
+      ? Number(prediction.probability)
       : prediction.confidence
         ? parseFloat(prediction.confidence)
         : 0;
@@ -122,7 +124,7 @@ const Result = () => {
       };
 
       const response = await fetch(
-        "http://ec2-13-235-73-2.ap-south-1.compute.amazonaws.com:5000/download-report",
+        `${API_BASE}/download-report`,
         {
           method: "POST",
           headers: {

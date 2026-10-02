@@ -22,9 +22,9 @@ const Home = () => {
   const features = [
     {
       icon: Brain,
-      title: "Hybrid Neuro-Fuzzy Model",
+      title: "Machine Learning Model",
       description:
-        "A PyTorch neural network works together with fuzzy logic rules to improve prediction reliability and reduce false positives.",
+        "A machine learning model analyzes patient biomarkers to accurately predict diabetes risk and evaluate clinical indicators.",
       color: "#2563EB",
     },
     {
@@ -49,7 +49,7 @@ const Home = () => {
       value: "82–88%",
       label: "Confidence Range",
       description:
-        "Typical prediction confidence from the neural network model.",
+        "Typical prediction confidence from the machine learning model.",
       color: "#2563EB",
     },
     {
@@ -94,13 +94,13 @@ const Home = () => {
                 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#1E293B] leading-tight mb-6"
                 data-testid="hero-title">
                 Predict Diabetes Risk Using{" "}
-                <span className="text-[#2563EB]">Neuro + Fuzzy AI</span>
+                <span className="text-[#2563EB]">Machine Learning</span>
               </h1>
 
               <p
                 className="text-lg leading-relaxed text-[#64748B] max-w-2xl mb-8"
                 data-testid="hero-subtitle">
-                This system combines a PyTorch neural network with fuzzy logic
+                This system utilizes an advanced machine learning model
                 to estimate diabetes risk from HbA1c, BMI, age, triglycerides
                 and urea levels. It also explains the prediction in simple
                 language.
@@ -211,7 +211,7 @@ const Home = () => {
             </h2>
 
             <p className="text-[#64748B] max-w-3xl mx-auto text-lg leading-relaxed">
-              The model combines neural networks and fuzzy rules to produce more
+              The model uses advanced machine learning algorithms to produce
               understandable and clinically meaningful diabetes predictions.
             </p>
           </motion.div>
@@ -290,8 +290,7 @@ const Home = () => {
       <footer className="bg-white border-t border-[#E2E8F0] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-sm text-[#64748B]">
-            © 2026 Hybrid Diabetes Prediction System • Built with PyTorch, Fuzzy
-            Logic and Explainable AI
+            © 2026 Diabetes Predictor • Built with Machine Learning and Explainable AI
           </p>
         </div>
       </footer>

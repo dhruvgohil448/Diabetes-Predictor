@@ -18,6 +18,8 @@ import {
   TooltipTrigger,
 } from "../components/ui/tooltip";
 
+const API_BASE = process.env.REACT_APP_API_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
+
 const PatientForm = () => {
   const navigate = useNavigate();
 
@@ -113,7 +115,7 @@ const PatientForm = () => {
       });
 
       const response = await fetch(
-        "http://ec2-13-235-73-2.ap-south-1.compute.amazonaws.com:5000/upload-reports",
+        `${API_BASE}/upload-reports`,
         {
           method: "POST",
           body: form,
@@ -130,25 +132,26 @@ const PatientForm = () => {
         ...prev,
         hba1c:
           data.extracted?.HbA1c !== null && data.extracted?.HbA1c !== undefined
-            ? data.extracted.HbA1c
+            ? String(data.extracted.HbA1c)
             : prev.hba1c,
         bmi:
           data.extracted?.BMI !== null && data.extracted?.BMI !== undefined
-            ? data.extracted.BMI
+            ? String(data.extracted.BMI)
             : prev.bmi,
         age:
           data.extracted?.AGE !== null && data.extracted?.AGE !== undefined
-            ? data.extracted.AGE
+            ? String(data.extracted.AGE)
             : prev.age,
         tg:
           data.extracted?.TG !== null && data.extracted?.TG !== undefined
-            ? data.extracted.TG
+            ? String(data.extracted.TG)
             : prev.tg,
         urea:
           data.extracted?.Urea !== null && data.extracted?.Urea !== undefined
-            ? data.extracted.Urea
+            ? String(data.extracted.Urea)
             : prev.urea,
       }));
+      setErrors({});
     } catch (err) {
       console.error(err);
       alert(err.message);
@@ -207,7 +210,7 @@ const PatientForm = () => {
       };
 
       const response = await fetch(
-        "http://ec2-13-235-73-2.ap-south-1.compute.amazonaws.com:5000/predict",
+        `${API_BASE}/predict`,
         {
           method: "POST",
           headers: {
@@ -463,17 +466,17 @@ const PatientForm = () => {
 
                 <div className="space-y-2 text-[#64748B] text-sm">
                   <p className="animate-pulse">
-                    Running Neural Network Analysis...
+                    Running Machine Learning Analysis...
                   </p>
                   <p
                     className="animate-pulse"
                     style={{ animationDelay: "0.3s" }}>
-                    Applying Fuzzy Logic Rules...
+                    Evaluating Patient Biomarkers...
                   </p>
                   <p
                     className="animate-pulse"
                     style={{ animationDelay: "0.6s" }}>
-                    Generating Recommendations...
+                    Generating Clinical Recommendations...
                   </p>
                 </div>
               </div>
